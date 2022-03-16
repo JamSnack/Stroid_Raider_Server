@@ -1,5 +1,7 @@
 import socket
 import threading
+import json
+import Stroid_Raider_Lobby
 
 # Connection Data
 ip = '127.0.0.1'
@@ -10,9 +12,15 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((ip, port))
 server.listen()
 
-# array of client sockets
-clients = []
-host = -1
+test = """{ "cmd": "lobby_info", "id": 0.0 }"""
+print(test)
+print(len(test))
+test = json.loads(test)
+print("Decode Test: "+str(test["id"]))
+
+# List of lobbies
+lobbies = []
+next_id = 1000 #next id to be given to a new lobby
 
 # Sending packets to all clients, excluding the player who initially sent the packet
 def broadcast(message, exclude):
@@ -46,19 +54,46 @@ def receive():
         client, address = server.accept()
         print("Connected with {}".format(str(address)))
 
-        clients.append(client)
+        #Add the client to the correct lobby
 
-        if (host == -1):
-                game_host = client
-                print("New host is: "+str(client))
+        
+        lobby_packet = client.recv(512)
+        print(lobby_packet)
+        print("UTF-8 Decode:")
+        print(lobby_packets)
+        lobby_packet = lobby_packet.decode('utf-8') #Prepare the information to be handled by the json decoder
+        lobby_packet = lobby_packet.strip(lobby_packet[-1])
+        print(lobby_packet)
+        print(len(lobby_packet))
+        lobby_info = json.loads(lobby_packet)
 
-        # Print And Broadcast Nickname
-        #broadcast("Someone joined!".encode('ascii'), client)
+        _success = False
+
+        if (lobby_info["cmd"] == "lobby_info"):
+            lobby_id = lobby_info["id"]
+
+            #- Look for an existing lobby to add the client into
+            for lobby in lobbies:
+                if (lobby.getId() == lobby_id):
+                    lobby.addClient(client)
+                    _success = True
+                    break
+
+            #- If a lobby doesn't exist, make one and add the client to that.
+        if (_success == False & isinstance(lobby_id,int)):
+            temp_lobby = Lobby(next_id)
+            print("Lobby created: "+next_id)
+            next_id += 1
+
+            temp_lobby.addClient(client)
+            lobbies.append(temp_lobby)
+            _success = True
 
         # Pass the data off into a handling thread:
-        print("Starting a thread...")
-        thread = threading.Thread(target=handle, args=(client,))
-        thread.start()
+        if (_success == True):
+            print("Starting a thread...")
+            thread = threading.Thread(target=handle, args=(client,))
+            thread.start()
 
 #Begin the server
 receive()
