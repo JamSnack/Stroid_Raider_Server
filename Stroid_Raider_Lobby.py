@@ -12,9 +12,11 @@ class Lobby:
     def addClient(self,client):
         self.clients.append(client)
         print("Client added to lobby: "+str(self.id))
+        self.spawn_thread(client)
 
     def removeClient(self,index):
         self.clients.remove(index)
+
 
 
     # Sending packets to all clients, excluding the player who initially sent the packet
@@ -37,7 +39,7 @@ class Lobby:
                 #print("//data failed!//")
                 # Something went horribly wrong! Disconnect the client.
                 index = self.clients.index(client)
-                self.clients.remove(client)
+                self.removeClient(index)
                 client.close()
                 print("Client removed from lobby: "+str(self.id))
                 break
