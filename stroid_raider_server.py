@@ -48,7 +48,6 @@ def receive():
         print("Connected with {}".format(str(address)))
 
         #Add the client to the correct lobby
-        
         lobby_packet = client.recv(512)
         lobby_packet = lobby_packet.decode('utf-8').replace('\x00', '')
         lobby_packet = json.loads(lobby_packet)
@@ -70,7 +69,12 @@ def receive():
                 if (lobby.getId() == lobby_id):
                     lobby.addClient(client)
                     _success = True
-                    break
+                elif (len(lobby.getClients()) == 0):
+                    #The lobby is empty, destroy it.
+                    lobbies.remove(lobby)
+                    print("Lobby removed: "+str(lobby.getId()))
+
+                #print(lobby.toString())
 
             #- If a lobby doesn't exist, make one and add the client to that.
         if (_success == False & isinstance(lobby_id,int)):
