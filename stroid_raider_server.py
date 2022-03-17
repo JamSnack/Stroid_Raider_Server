@@ -48,9 +48,14 @@ def receive():
         print("Connected with {}".format(str(address)))
 
         #Add the client to the correct lobby
-        lobby_packet = client.recv(512)
-        lobby_packet = lobby_packet.decode('utf-8').replace('\x00', '')
-        lobby_packet = json.loads(lobby_packet)
+        #NOTE: Client.recv MUST recieve the lobby_id packet. That means that we should later set up a temporary handler 
+        #that expects to receive packets from the client AND THEN have the lobby placement code inside that
+        try:
+            lobby_packet = client.recv(512)
+            lobby_packet = lobby_packet.decode('utf-8').replace('\x00', '')
+            lobby_packet = json.loads(lobby_packet)
+        except:
+            print("Some exception...")
         
 
         # Extract the correct id

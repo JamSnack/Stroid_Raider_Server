@@ -1,5 +1,7 @@
 #Lobby class
+from encodings import utf_8
 import threading
+import json
 
 class Lobby:
     def __init__(self, id):
@@ -21,10 +23,25 @@ class Lobby:
         #Add the new client to clients and start a thread for them.
         self.clients.append(client)
         print("Client added to lobby: "+str(self.id))
+        
+        #Spawn a thread for this client
         self.spawn_thread(client)
+
+        #Send lobby info
+        self.sendLobbyInfo(client)
+
 
     def removeClient(self,index):
         self.clients.pop(index)
+
+
+    def sendLobbyInfo(self, client):
+        data = """{ "cmd" : "lobby_connect_success", "l_id" : """+ str(self.id) + " }"
+
+        data = str(json.loads(data)).replace("'", '"')
+        data = data.encode("utf_8")
+        #print(data)
+        client.send(data)
 
 
     # Sending packets to all clients, excluding the player who initially sent the packet OR send it to the host
