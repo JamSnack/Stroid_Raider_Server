@@ -91,5 +91,7 @@ def receive():
 
             next_id += 1
 
+        print("------")
+
 #Begin the server
 receive()
