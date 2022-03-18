@@ -72,11 +72,13 @@ class Lobby:
 
                 #if (self.lobby_host == client): TO-DO: Host migration
                 print("Client removed from lobby: "+str(self.id))
+                self.message_disconnect(client)
                 break
 
     def spawn_thread(self, client):
         thread = threading.Thread(target=self.handle, args=(client,))
         thread.start()
+
 
     def toString(self):
         _str = str(self.getId())+":\n- Clients:\n"
@@ -85,6 +87,28 @@ class Lobby:
             _str += "-- "+str(c)+"\n"
 
         return _str
+
+    def constructPacket(self, **data):
+        _counter = 0
+        str_json = "{"
+        for key, value in data.items():
+            if (_counter > 0):
+                str_json += ","
+
+            str_json += f""" "{key}" : {value}"""
+            _counter += 1
+
+        str_json += "}"
+        #print("String json: "+str_json)
+        #str_json = json.loads(str_json)
+        str_json = str_json.encode("utf-8") #encode the json into byte form
+        return str_json
+
+
+    def message_disconnect(self, client):
+        #TO-DO Store playernames in a lobby client?
+        message = self.constructPacket(cmd='"player_disconnected"')
+        self.broadcast(message, client)
 
 
 
