@@ -24,18 +24,21 @@ print("Decode Test: "+str(test["id"]))
 lobbies = []
 
 # Properly unpack packets and split them
-def unpack(packet):
-    _str = packet.split("{")
-    new_str = []
+def preparePacket(packet):
+    packet_strings = packet.split("{")
+    #print("packet_strings: "+str(packet_strings))
+    loaded_packet_list = []
 
-    for n in _str:
-        _n = "{"+n
-        #_n = json.loads(_n)
-        new_str.append(_n)
+    for i in packet_strings:
+        if (i != ""):
+            new_string = "{"+i
+            #print("i: "+str(i))
+            #print("New string: "+new_string)
+            new_string = json.loads(new_string)
+            loaded_packet_list.append(new_string)
 
-    print("New string:")
-    print(new_str)
-    return new_str
+    #print("Completed Json: "+str(loaded_packet_list))
+    return loaded_packet_list
 
 # Receiving / Listening Function
 def receive():
@@ -50,19 +53,24 @@ def receive():
         #Add the client to the correct lobby
         #NOTE: Client.recv MUST recieve the lobby_id packet. That means that we should later set up a temporary handler 
         #that expects to receive packets from the client AND THEN have the lobby placement code inside that
+        lobby_id = -1
+        packet_list = []
+
         try:
-            lobby_packet = client.recv(512)
+            lobby_packet = client.recv(512) #expect a lobby_info packet from the player!
             lobby_packet = lobby_packet.decode('utf-8').replace('\x00', '')
-            lobby_packet = json.loads(lobby_packet)
+            print(lobby_packet)
+            packet_list = preparePacket(lobby_packet).copy()
+
+            # Extract the correct id
+            if type(packet_list) is list:
+                for packet in packet_list:
+                    if type(packet) is dict:
+                        if (packet["cmd"] == "lobby_info"):
+                            lobby_id = packet["id"]
+                            break
         except:
             print("Some exception...")
-        
-
-        # Extract the correct id
-        lobby_id = -1
-
-        if (lobby_packet["cmd"] == "lobby_info"):
-            lobby_id = lobby_packet["id"]
 
         print("Requested Lobby ID:" + str(lobby_id))
                 
@@ -82,7 +90,7 @@ def receive():
                 #print(lobby.toString())
 
             #- If a lobby doesn't exist, make one and add the client to that.
-        if (_success == False & isinstance(lobby_id,int)):
+        if (_success == False and lobby_id != -1 and isinstance(lobby_id,float)):
             temp_lobby = Lobby.Lobby(next_id)
             print("Lobby created: "+str(temp_lobby.getId()))
 

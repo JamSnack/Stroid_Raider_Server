@@ -61,7 +61,8 @@ class Lobby:
                 #print("//data received!//")
                 # Relay those messages!
                 message = client.recv(512) #No idea how to make this data size accurate. 512 should be good but no clue!
-                #print("Data is: "+str(message))
+                
+                print("Data is: "+str(message))
                 self.broadcast(message, client)
             except:
                 #print("//data failed!//")
@@ -87,6 +88,19 @@ class Lobby:
             _str += "-- "+str(c)+"\n"
 
         return _str
+
+    # Properly unpack packets and split them
+    def preparePacket(packet):
+        packet_strings = packet.split("{")
+        loaded_packet_list = []
+
+        for i in packet_strings:
+            if (i != ""):
+                new_string = "{"+i
+                new_string = json.loads(new_string)
+                loaded_packet_list.append(new_string)
+
+        return loaded_packet_list
 
     def constructPacket(self, **data):
         _counter = 0
