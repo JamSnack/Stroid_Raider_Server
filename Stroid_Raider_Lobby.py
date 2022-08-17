@@ -60,7 +60,7 @@ class Lobby:
             try:
                 #print("//data received!//")
                 # Relay those messages!
-                message = client.recv(512) #No idea how to make this data size accurate. 512 should be good but no clue!
+                message = client.recv(512) #No idea how to make this data size accurate. 512 should be good but no clue! Needs to coenside with the client.recv function in the server script
                 
                 print("Data is: "+str(message))
                 self.broadcast(message, client)
