@@ -4,10 +4,11 @@ import threading
 import json
 
 class Lobby:
-    def __init__(self, id):
+    def __init__(self, id, packet_size):
         self.id = id
         self.clients = []
         self.lobby_host = None
+        self.packet_size = packet_size
 
     def getId(self):
         return self.id
@@ -60,7 +61,7 @@ class Lobby:
             try:
                 #print("//data received!//")
                 # Relay those messages!
-                message = client.recv(512) #No idea how to make this data size accurate. 512 should be good but no clue! Needs to coenside with the client.recv function in the server script
+                message = client.recv(self.packet_size) #No idea how to make this data size accurate. 512 should be good but no clue! Needs to coenside with the client.recv function in the server script
                 
                 print("Data is: "+str(message))
                 self.broadcast(message, client)

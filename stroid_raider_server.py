@@ -4,9 +4,12 @@ import json
 import Stroid_Raider_Lobby as Lobby
 from ast import literal_eval
 
+#Python version 3.10
+
 # Connection Data
 ip = '127.0.0.1'
 port = 55555
+packet_size = 512
 
 # Starting Server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -57,7 +60,7 @@ def receive():
         packet_list = []
 
         try:
-            lobby_packet = client.recv(512) #expect a lobby_info packet from the player!
+            lobby_packet = client.recv(packet_size) #expect a lobby_info packet from the player!
             lobby_packet = lobby_packet.decode('utf-8').replace('\x00', '')
             print(lobby_packet)
             packet_list = preparePacket(lobby_packet).copy()
@@ -91,7 +94,7 @@ def receive():
 
             #- If a lobby doesn't exist, make one and add the client to that.
         if (_success == False and lobby_id != -1 and isinstance(lobby_id,float)):
-            temp_lobby = Lobby.Lobby(next_id)
+            temp_lobby = Lobby.Lobby(next_id, packet_size)
             print("Lobby created: "+str(temp_lobby.getId()))
 
             temp_lobby.addClient(client)
