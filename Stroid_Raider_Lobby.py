@@ -5,10 +5,11 @@ import json
 
 class Lobby:
     def __init__(self, id, packet_size):
-        self.id = id
-        self.clients = []
-        self.lobby_host = None
+        self.id = id #lobby_id
+        self.clients = [] #list of clients
+        self.lobby_host = None #the client who is hosting the lobby
         self.packet_size = packet_size
+        self.next_player_id = 0 #Used to assign player ids
 
     def getId(self):
         return self.id
@@ -37,7 +38,7 @@ class Lobby:
 
 
     def sendLobbyInfo(self, client):
-        data = """{ "cmd" : "lobby_connect_success", "l_id" : """+ str(self.id) + " }"
+        data = """{ "cmd" : "lobby_connect_success", "l_id" : """ + str(self.id) + """, "plr_id" : """ + str(self.next_player_id) + " }"
 
         data = str(json.loads(data)).replace("'", '"')
         data = data.encode("utf_8")
@@ -45,7 +46,18 @@ class Lobby:
         client.send(data)
 
 
-    # Sending packets to all clients, excluding the player who initially sent the packet OR send it to the host
+        
+        if (client != self.lobby_host):
+            data = """{ "cmd" : "player_connected", "p_id" : """ + str(self.next_player_id) + " }"
+            data = str(json.loads(data)).replace("'", '"')
+            data = data.encode("utf_8")
+            
+            self.lobby_host.send(data)
+
+        self.next_player_id += 1
+
+
+    # Sending packets to all clients, excluding the player who initially sent the packet (server to clients) OR send it to the packet to the lobby host (client to server)
     def broadcast(self, message, exclude):
         if (exclude == self.lobby_host):
             for client in self.clients:
@@ -57,16 +69,13 @@ class Lobby:
      # Handling Messages From Clients
     def handle(self, client):
         while True:
-            #print("//data received!//")
             try:
-                #print("//data received!//")
                 # Relay those messages!
-                message = client.recv(self.packet_size) #No idea how to make this data size accurate. 512 should be good but no clue! Needs to coenside with the client.recv function in the server script
+                message = client.recv(self.packet_size) #No idea how to make this data size accurate. using 4096 rn
                 
-                print("Data is: "+str(message))
+                #print("Data is: "+str(message))
                 self.broadcast(message, client)
             except:
-                #print("//data failed!//")
                 # Something went horribly wrong! Disconnect the client.
                 index = self.clients.index(client)
                 self.removeClient(index)
@@ -121,7 +130,6 @@ class Lobby:
 
 
     def message_disconnect(self, client):
-        #TO-DO Store playernames in a lobby client?
         message = self.constructPacket(cmd='"player_disconnected"')
         self.broadcast(message, client)
 

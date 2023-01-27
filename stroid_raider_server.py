@@ -9,7 +9,7 @@ from ast import literal_eval
 # Connection Data
 ip = '127.0.0.1'
 port = 55555
-packet_size = 512
+packet_size = 4096
 
 # Starting Server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -60,6 +60,7 @@ def receive():
         packet_list = []
 
         try:
+            print("Waiting for lobby_info packet...")
             lobby_packet = client.recv(packet_size) #expect a lobby_info packet from the player!
             lobby_packet = lobby_packet.decode('utf-8').replace('\x00', '')
             print(lobby_packet)
@@ -74,9 +75,8 @@ def receive():
                             break
         except:
             print("Some exception...")
-
+            
         print("Requested Lobby ID:" + str(lobby_id))
-                
         _success = False
 
         if (lobby_id != -1):
@@ -93,7 +93,7 @@ def receive():
                 #print(lobby.toString())
 
             #- If a lobby doesn't exist, make one and add the client to that.
-        if (_success == False and lobby_id != -1 and isinstance(lobby_id,float)):
+        if (_success == False and lobby_id == 0 and isinstance(lobby_id,float)):
             temp_lobby = Lobby.Lobby(next_id, packet_size)
             print("Lobby created: "+str(temp_lobby.getId()))
 
@@ -101,6 +101,12 @@ def receive():
             lobbies.append(temp_lobby)
 
             next_id += 1
+
+            _success = True
+
+        #If _success is still false at this point, the client failed to enter a lobby. Disconnect them so that they can try again.
+        if (_success == False):
+            client.close()
 
         print("------")
 
