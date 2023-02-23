@@ -73,8 +73,8 @@ def receive():
                         if (packet["cmd"] == "lobby_info"):
                             lobby_id = packet["id"]
                             break
-        except:
-            print("Some exception...")
+        except Exception as e:
+            print(e)
             
         print("Requested Lobby ID:" + str(lobby_id))
         _success = False

@@ -68,14 +68,59 @@ class Lobby:
     
      # Handling Messages From Clients
     def handle(self, client):
+        break_client = False
+
         while True:
-            try:
-                # Relay those messages!
-                message = client.recv(self.packet_size) #No idea how to make this data size accurate. using 4096 rn
+
+            message_length = 0
+            header = b''
+            while True:
+                try:
+                    _c = client.recv(1) #recv one byte from the client
+                    print(_c)
+
+                    if (_c == b'|'):
+                        try:
+                            print("H : " + str(header))
+                            message_length = int(header)
+                        except Exception as e:
+                            print(e)
+                            message_length = -1
+                        break
+                    else:
+                        header = header + _c
+                except:
+                    break_client = True
+                    break
+            
+            #We have constructed the header at this point, use it to receieve and distribute the rest of the packet
+            chunks = []
+            bytes_received = 0
+
+            while bytes_received < message_length:
+                try:
+                    data = client.recv(message_length - bytes_received)
+                    
+                    bytes_received = bytes_received + len(data)
+                    chunks.append(data)
+                    #print('bytes_received')
+                    
+
+                    #we have received all of the data: broadcast it and then reset. Otherwise append to chunks.
+                    if (bytes_received == message_length):
+                        prepared_data = b''.join(chunks)
+
+                        #1. b'\x00{ "h": 0.0, "cmd": "player_move", "p_id": 1.0, "v": -1.0, "s": 0.0 }'
+                        print(prepared_data)
+
+                        self.broadcast(prepared_data, client) #think this'll work?
                 
-                #print("Data is: "+str(message))
-                self.broadcast(message, client)
-            except:
+                except:
+                    print("Error receiving data: " + str(b''.join(chunks)))
+                    break_client = True
+
+
+            if break_client:
                 # Something went horribly wrong! Disconnect the client.
                 index = self.clients.index(client)
                 self.removeClient(index)
