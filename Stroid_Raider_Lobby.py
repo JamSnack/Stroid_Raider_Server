@@ -77,7 +77,7 @@ class Lobby:
             while True:
                 try:
                     _c = client.recv(1) #recv one byte from the client
-                    print(_c)
+                    #print(_c)
 
                     if (_c == b'|'):
                         try:
